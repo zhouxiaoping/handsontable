@@ -428,6 +428,11 @@
    */
   Handsontable.DataMap.prototype.set = function (row, prop, value, source) {
     row = Handsontable.hooks.execute(this.instance, 'modifyRow', row, source || "datamapGet");
+
+    if (row < 0) {
+      return;
+    }
+
     if (typeof prop === 'string' && prop.indexOf('.') > -1) {
       var sliced = prop.split(".");
       var out = this.dataSource[row];
