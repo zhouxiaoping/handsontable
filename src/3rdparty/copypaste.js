@@ -47,8 +47,9 @@ CopyPasteClass.prototype.init = function () {
     this.elDiv.id = 'CopyPasteDiv';
     style = this.elDiv.style;
     style.position = 'fixed';
-    style.top = '-10000px';
-    style.left = '-10000px';
+    style.top = '0px';
+    style.left = '0px';
+    style.zIndex = '-9999';
     parent.appendChild(this.elDiv);
 
     this.elTextarea = document.createElement('TEXTAREA');
