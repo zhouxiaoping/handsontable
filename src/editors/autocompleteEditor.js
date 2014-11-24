@@ -51,6 +51,39 @@
     Handsontable.editors.HandsontableEditor.prototype.prepare.apply(this, arguments);
   };
 
+  var checkLongestSuggestionWidth = function (root, choices, query) {
+    if (choices.length == 0) {
+      return 0;
+    }
+
+    var dummy = document.createElement('TD')
+      , longest = choices[0]
+      , widestWidth = 0;
+
+    for (var i = 0, choiceCount = choices.length; i < choiceCount; i++) {
+      if (choices[i].length > longest.length) {
+        longest = choices[i];
+      }
+    }
+
+    var indexOfMatch = longest.indexOf(query);
+    if (indexOfMatch != -1) {
+      var match = longest.substr(indexOfMatch, query.length);
+      longest = longest.replace(match, '<strong>' + match + '</strong>');
+    }
+
+    Handsontable.Dom.fastInnerHTML(dummy, longest);
+
+
+    root.appendChild(dummy);
+
+    widestWidth = Handsontable.Dom.outerWidth(dummy);
+
+    root.removeChild(dummy);
+
+    return widestWidth;
+  };
+
   AutocompleteEditor.prototype.open = function () {
     Handsontable.editors.HandsontableEditor.prototype.open.apply(this, arguments);
 
@@ -152,9 +185,11 @@
     this.choices = choices;
 
     this.htEditor.loadData(Handsontable.helper.pivot([choices]));
-    this.htEditor.updateSettings({height: this.getDropdownHeight()});
-    //Handsontable.tmpHandsontable(this.htContainer,'loadData', Handsontable.helper.pivot([choices]));
-    //Handsontable.tmpHandsontable(this.htContainer,'updateSettings', {height: this.getDropdownHeight()});
+    this.htEditor.updateSettings({
+      colWidths: [Math.max(Handsontable.Dom.outerWidth(this.TEXTAREA) - 2, checkLongestSuggestionWidth(this.instance.rootElement, this.choices, this.query))],
+      height: this.getDropdownHeight()
+    });
+
 
     if (this.cellProperties.strict === true) {
       this.highlightBestMatchingChoice(highlightIndex);

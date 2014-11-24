@@ -288,14 +288,24 @@ describe('AutocompleteEditor', function () {
 
     });
 
-    it('autocomplete list should have textarea dimensions', function () {
+    it('autocomplete list should have textarea dimensions unless any suggestion is wider than the textarea', function () {
       var syncSources = jasmine.createSpy('syncSources');
+      var longerSource = jasmine.createSpy('longerSource');
 
       syncSources.plan = function (query, process) {
         process(choices);
       };
 
-      handsontable({
+      longerSource.plan = function(query, process) {
+        process([
+          'test',
+          'entry',
+          'test entry that exceeds the textarea width',
+          'test entry'
+        ])
+      };
+
+      var hot = handsontable({
         colWidths: [200],
         columns: [
           {
@@ -319,6 +329,27 @@ describe('AutocompleteEditor', function () {
       runs(function () {
         expect(editor.find('.autocompleteEditor .htCore td').width()).toEqual(editor.find('.handsontableInput').width());
         expect(editor.find('.autocompleteEditor .htCore td').width()).toBeGreaterThan(188);
+
+        hot.updateSettings({
+          columns: [
+            {
+              editor: 'autocomplete',
+              source: longerSource
+            }
+          ]
+        });
+
+        selectCell(0, 0);
+
+        keyDownUp('enter');
+      });
+
+      waitsFor(function () {
+        return longerSource.calls.length > 0;
+      }, 'Source function call', 1000);
+
+      runs(function () {
+        expect(editor.find('.autocompleteEditor .htCore td').width()).toBeGreaterThan(editor.find('.handsontableInput').width());
       });
     });
 
