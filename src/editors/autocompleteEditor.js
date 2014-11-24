@@ -254,13 +254,19 @@
   };
 
   AutocompleteEditor.prototype.getDropdownHeight = function(){
-    //var firstRowHeight = this.$htContainer.handsontable('getInstance').getRowHeight(0) || 23;
-    var firstRowHeight = this.htEditor.getInstance().getRowHeight(0) || 23;
-    //var firstRowHeight = Handsontable.tmpHandsontable(this.htContainer,'getInstance').getRowHeight(0) || 23;
-    return this.choices.length >= 10 ? 10 * firstRowHeight : this.choices.length * firstRowHeight + 8;
-    //return 10 * this.$htContainer.handsontable('getInstance').getRowHeight(0);
+    var firstRowHeight = this.htEditor.getInstance().getRowHeight(0) || 23
+      , choicesCount = this.choices.length;
+
+    if(choicesCount == 0) {
+      return 0;
+    } else if(choicesCount >= 10) {
+      return 10 * firstRowHeight;
+    } else {
+      return this.choices.length * firstRowHeight + 8;
+    }
+
     //sorry, we can't measure row height before it was rendered. Let's use fixed height for now
-    return 230;
+    //return 230;
   };
 
 
