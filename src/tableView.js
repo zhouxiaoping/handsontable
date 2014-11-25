@@ -81,6 +81,8 @@ Handsontable.TableView = function (instance) {
 
     //function did not return until here, we have an outside click!
 
+    instance.runHooks('beforeOutsideMouseDown', event);
+
     if (that.settings.outsideClickDeselects) {
       instance.deselectCell();
     }

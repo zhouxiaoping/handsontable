@@ -622,7 +622,72 @@ describe('AutocompleteEditor', function () {
 
         expect(autocompleteEditor().is(":visible")).toBe(false);
       });
+    });
 
+    it('should revert the cell to the original value when clicked outside the table with the invalid value entered (if strict mode is set)', function () {
+      var syncSources = jasmine.createSpy('syncSources');
+
+      syncSources.plan = function (query, process) {
+        process(choices);
+      };
+
+      var hot = handsontable({
+        data: [
+          ['a'],
+          ['b'],
+          ['c'],
+          ['d']
+        ],
+        columns: [
+          {
+            editor: 'autocomplete',
+            source: syncSources,
+            strict: true
+          }
+        ]
+      });
+
+      var editor;
+
+      expect(hot.getDataAtCell(0, 0)).toEqual('a');
+      selectCell(0, 0);
+      $(document.activeElement).simulate('keydown', {
+        keyCode: 'd'.charCodeAt(0)
+      });
+
+      waitsFor(function () {
+        return syncSources.calls.length > 0;
+      }, 'Source function call', 1000);
+
+      runs(function () {
+
+        editor = hot.getActiveEditor();
+
+        expect(autocompleteEditor().is(":visible")).toBe(true);
+
+        editor.TEXTAREA.value = 'duh';
+
+        $(editor.TEXTAREA).simulate('keydown', {
+          keyCode: 'h'.charCodeAt(0)
+        });
+      });
+
+      waitsFor(function () {
+        return syncSources.calls.length > 1;
+      }, 'Source function call', 1000);
+
+      runs(function () {
+        expect(editor.TEXTAREA.value).toBe('duh');
+
+        $('body').simulate('mousedown');
+      });
+
+      waits(30);
+
+      runs(function () {
+        expect(autocompleteEditor().is(":visible")).toBe(false);
+        expect(hot.getDataAtCell(0, 0)).toEqual('a');
+      });
 
     });
 

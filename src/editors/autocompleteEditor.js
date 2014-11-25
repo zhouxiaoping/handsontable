@@ -12,6 +12,18 @@
 
     this.query = null;
     this.choices = [];
+
+    this.bindMouseEvents();
+  };
+
+  AutocompleteEditor.prototype.bindMouseEvents = function () {
+    var that = this;
+
+    this.instance.addHook('beforeOutsideMouseDown', function (event) {
+      event.preventDefault();
+
+      that.finishEditing(true);
+    });
   };
 
   AutocompleteEditor.prototype.createElements = function(){
