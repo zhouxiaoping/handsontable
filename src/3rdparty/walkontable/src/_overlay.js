@@ -45,7 +45,13 @@ WalkontableOverlay.prototype.getScrollableElement = function (TABLE) {
   while (el && el.style) {
     if (el.style.overflow !== 'visible' && el.style.overflow !== '') {
       return el;
+    } else {
+      var computedStyle = window.getComputedStyle(el);
+      if(computedStyle.overflow !== 'visible' && computedStyle.overflow !== '') {
+        return el;
+      }
     }
+
     if (this instanceof WalkontableHorizontalScrollbarNative && el.style.overflowX !== 'visible' && el.style.overflowX !== '') {
       return el;
     }
