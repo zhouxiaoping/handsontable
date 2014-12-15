@@ -62,14 +62,17 @@
   var onBeforeKeyDown = function (event) {
     var instance = this;
     var editor = instance.getActiveEditor();
+    var selectedIndex = editor.select.selectedIndex;
+
+    Handsontable.Dom.enableImmediatePropagation(event);
 
     switch (event.keyCode){
       case Handsontable.helper.keyCode.ARROW_UP:
 
-        var previousOption = editor.select.find('option:selected').prev();
+        var previousOption = editor.select.options[selectedIndex - 1];
 
-        if (previousOption.length == 1){
-          previousOption.prop('selected', true);
+        if (previousOption){
+          editor.select.value = previousOption.value;
         }
 
         event.stopImmediatePropagation();
@@ -78,10 +81,10 @@
 
       case Handsontable.helper.keyCode.ARROW_DOWN:
 
-        var nextOption = editor.select.find('option:selected').next();
+        var nextOption = editor.select.options[selectedIndex + 1];
 
-        if (nextOption.length == 1){
-          nextOption.prop('selected', true);
+        if (nextOption){
+          editor.select.value = nextOption.value;
         }
 
         event.stopImmediatePropagation();
