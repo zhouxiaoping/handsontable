@@ -7,7 +7,6 @@
   <!--
   Loading Handsontable (full distribution that includes all dependencies apart from jQuery)
   -->
-  <script data-jsfiddle="common" src="../lib/jquery.min.js"></script>
   <script data-jsfiddle="common" src="../dist/handsontable.full.js"></script>
   <link data-jsfiddle="common" rel="stylesheet" media="screen" href="../dist/handsontable.full.css">
 
@@ -122,7 +121,7 @@
               contextMenu: true
             };
 
-            var $hooksList = $('#hooksList');
+            var hooksList = document.getElementById('hooksList');
             var hooks = Handsontable.hooks.getRegistered();
             hooks.forEach(function(hook) {
               var checked = '';
@@ -130,7 +129,10 @@
                 checked = 'checked';
 
               }
-              $hooksList.append('<li><label><input type="checkbox" ' + checked + ' id="check_' + hook + '"> ' + hook + '</label></li>');
+
+              hooksList.innerHTML += '<li><label><input type="checkbox" ' + checked + ' id="check_' + hook + '"> ' + hook + '</label></li>';
+
+//              hooksList.append('<li><label><input type="checkbox" ' + checked + ' id="check_' + hook + '"> ' + hook + '</label></li>');
               config[hook] = function() {
                 log_events(hook, arguments);
               }
@@ -197,23 +199,36 @@
             var example1 = document.getElementById('example1');
             var hot = new Handsontable(example1,config);
 
-            $('#check_select_all').click(function () {
-              var state = this.checked;
-              $('input[type=checkbox]').each(function () {
-                if (state === true) {
-                  if (this.id === 'check_modifyRow') {
+            var checkSelectAll = document.getElementById('check_select_all');
+
+            checkSelectAll.addEventListener('mousedown', function (event) {
+              var thisEl = event.target;
+              var state = thisEl.checked;
+              var checkboxes = document.querySelectorAll('input[type=checkbox]');
+              var checkboxesArr = Array.prototype.slice.call(checkboxes);
+              checkboxesArr.forEach(function (checkbox) {
+                if(checkbox === checkSelectAll) {
+                  return;
+                }
+                if (state !== true) {
+                  if (checkbox.id === 'check_modifyRow') {
                     return; //too much noise in the log
                   }
                 }
-                this.checked = state;
+                checkbox.checked = !state;
               });
             });
 
-            $('input[type=checkbox]').click(function () {
-              if (!this.checked) {
-                document.getElementById('check_select_all').checked = false;
-              }
+            var checkboxes = document.querySelectorAll('input[type=checkbox]');
+            var checkboxesArr = Array.prototype.slice.call(checkboxes);
+            checkboxesArr.forEach(function (cbox) {
+              cbox.addEventListener('mousedown', function (event) {
+                if (!event.target.checked) {
+                  document.getElementById('check_select_all').checked = false;
+                }
+              });
             });
+
           </script>
         </div>
       </div>
