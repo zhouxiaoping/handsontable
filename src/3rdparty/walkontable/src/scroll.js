@@ -24,10 +24,8 @@ WalkontableScroll.prototype.scrollViewport = function (coords) {
 
   var TD = this.instance.wtTable.getCell(coords);
   if (typeof TD === 'object') {
-    if (coords.col >= this.instance.getSetting('fixedColumnsLeft')) {
       this.scrollToRenderedCell(TD);
-    }
-  }  else if (coords.row >= this.instance.wtTable.getLastVisibleRow()) {
+  } else if (coords.row >= this.instance.wtTable.getLastVisibleRow()) {
     this.instance.wtScrollbars.vertical.scrollTo(coords.row, true);
   } else if (coords.row >= this.instance.getSetting('fixedRowsTop')){
     this.instance.wtScrollbars.vertical.scrollTo(coords.row);
