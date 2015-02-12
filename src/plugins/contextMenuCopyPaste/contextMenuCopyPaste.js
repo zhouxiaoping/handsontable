@@ -29,12 +29,10 @@ class ContextMenuCopyPaste extends BasePlugin {
       ]
     };
     this.swfPath = null;
-    this.hotParent = null;
-    this.zeroClipboardInstance = null;
+    this.htContextMenu = null;
     this.outsideClickDeselectsCache = null;
-    this.eventHandlers = [];
 
-    this.hot.addHook('afterRender', () => this.setupZeroClipboard());
+    this.hot.addHook('afterContextMenuShow', htContextMenu => this.setupZeroClipboard(htContextMenu));
     this.hot.addHook('afterInit', () => this.afterInit());
     this.hot.addHook('afterContextMenuDefaultOptions', options => this.addToContextMenu(options));
   }
@@ -81,9 +79,9 @@ class ContextMenuCopyPaste extends BasePlugin {
    * @returns {String}
    */
   getCopyValue() {
-    this.hotParent.copyPaste.setCopyableText();
+    this.hot.copyPaste.setCopyableText();
 
-    return this.hotParent.copyPaste.copyPasteInstance.elTextarea.value;
+    return this.hot.copyPaste.copyPasteInstance.elTextarea.value;
   }
 
   /**
@@ -112,84 +110,59 @@ class ContextMenuCopyPaste extends BasePlugin {
   /**
    *
    */
-  setupZeroClipboard() {
-    if (!dom.hasClass(this.hot.rootElement, 'htContextMenu')) {
+  setupZeroClipboard(htContextMenu) {
+    if (!this.hot.getSettings().contextMenuCopyPaste) {
       return;
     }
-    var data = this.hot.getData();
+    this.htContextMenu = htContextMenu;
+    var data = this.htContextMenu.getData();
 
     // find position of 'copy' option
     for (var i = 0, ilen = data.length; i < ilen; i++) {
       /*jshint -W083 */
       if (data[i].key === 'copy') {
-        this.zeroClipboardInstance = new ZeroClipboard(this.hot.getCell(i, 0));
+        var zeroClipboardInstance = new ZeroClipboard(htContextMenu.getCell(i, 0));
 
-        this.zeroClipboardInstance.off();
-        this.zeroClipboardInstance.on('copy', (event) => {
+        zeroClipboardInstance.off();
+        zeroClipboardInstance.on('copy', (event) => {
           var clipboard = event.clipboardData;
 
           clipboard.setData('text/plain', this.getCopyValue());
-          this.hotParent.getSettings().outsideClickDeselects = this.outsideClickDeselectsCache;
+          this.hot.getSettings().outsideClickDeselects = this.outsideClickDeselectsCache;
         });
 
-        this.bindEvents();
+        this.bindEvents(); //no need to unbind events, because htContextMenu calls clear() on destroy
         break;
       }
     }
   }
 
   removeCurrentClass() {
-    var hadClass = this.hot.rootElement.querySelector('td.current');
+    var hadClass = this.htContextMenu.rootElement.querySelector('td.current');
 
     if (hadClass) {
       dom.removeClass(hadClass, 'current');
     }
-    this.outsideClickDeselectsCache = this.hotParent.getSettings().outsideClickDeselects;
-    this.hotParent.getSettings().outsideClickDeselects = false;
+    this.outsideClickDeselectsCache = this.hot.getSettings().outsideClickDeselects;
+    this.hot.getSettings().outsideClickDeselects = false;
   }
 
   removeZeroClipboardClass() {
-    var hadClass = this.hot.rootElement.querySelector('td.zeroclipboard-is-hover');
+    var hadClass = this.htContextMenu.rootElement.querySelector('td.zeroclipboard-is-hover');
 
     if (hadClass) {
       dom.removeClass(hadClass, 'zeroclipboard-is-hover');
     }
-    this.hotParent.getSettings().outsideClickDeselects = this.outsideClickDeselectsCache;
+    this.hot.getSettings().outsideClickDeselects = this.outsideClickDeselectsCache;
   }
 
   /**
    * Add all necessary event listeners
    */
   bindEvents() {
-    var eventManager;
-
-    if (!this.hotParent) {
-      return;
-    }
-    eventManager = eventManagerObject(this.hotParent);
-
-    this.unbindEvents();
-    this.eventHandlers.push(eventManager.addEventListener(document, 'mouseenter', () => this.removeCurrentClass()));
-    this.eventHandlers.push(eventManager.addEventListener(document, 'mouseleave', () => this.removeZeroClipboardClass()));
-  }
-
-  /**
-   * Remove all event listeners
-   */
-  unbindEvents() {
-    if (!this.hotParent) {
-      return;
-    }
-    this.eventHandlers.forEach((handler) => handler());
-    this.eventHandlers = [];
-  }
-
-  /**
-   * Destroy plugin
-   */
-  destroy() {
-    this.unbindEvents();
-    super();
+    var eventManager = new Handsontable.eventManager(this.htContextMenu);
+    eventManager.addEventListener(document, 'mouseenter', ()=> this.removeCurrentClass());
+    eventManager.addEventListener(document, 'mouseleave', ()=> this.removeZeroClipboardClass());
   }
 }
 

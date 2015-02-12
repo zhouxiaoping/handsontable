@@ -540,7 +540,6 @@ ContextMenu.prototype.show = function (menu, items) {
     colWidths: [200],
     readOnly: true,
     copyPaste: false,
-    //parentInstance: that.instance // Another solution to pass parentInstance to plugin constructor
     columns: [
       {
         data: 'name',
@@ -559,9 +558,6 @@ ContextMenu.prototype.show = function (menu, items) {
   var htContextMenu = new Handsontable.Core(menu, settings);
 
   // Pass HOT parent instance to plugin HOT ContextMenu instance
-  htContextMenu.addHook('beforeInit', function() {
-    this.getPlugin('contextMenuCopyPaste').hotParent = that.instance;
-  });
   htContextMenu.init();
 
   this.eventManager.removeEventListener(menu, 'mousedown');
@@ -573,6 +569,8 @@ ContextMenu.prototype.show = function (menu, items) {
   htContextMenu.listen();
 
   this.htMenus[htContextMenu.guid] = htContextMenu;
+
+  Handsontable.hooks.run(this.instance, 'afterContextMenuShow', htContextMenu);
 };
 
 ContextMenu.prototype.close = function (menu) {
@@ -604,6 +602,7 @@ ContextMenu.prototype.closeLastOpenedSubMenu = function () {
 ContextMenu.prototype.hide = function (menu) {
   menu.style.display = 'none';
   var instance =this.htMenus[menu.id];
+  Handsontable.hooks.run(this.instance, 'afterContextMenuHide', instance);
 
   instance.destroy();
   delete this.htMenus[menu.id];
@@ -1154,6 +1153,8 @@ Handsontable.hooks.add('afterUpdateSettings', init);
 Handsontable.hooks.add('afterInit', updateHeight);
 
 Handsontable.hooks.register('afterContextMenuDefaultOptions');
+Handsontable.hooks.register('afterContextMenuShow');
+Handsontable.hooks.register('afterContextMenuHide');
 
 Handsontable.ContextMenu = ContextMenu;
 
