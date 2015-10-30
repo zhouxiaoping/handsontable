@@ -7,13 +7,13 @@
  * Licensed under the MIT license.
  * http://handsontable.com/
  *
- * Date: Fri Oct 23 2015 12:42:18 GMT+0800 (CST)
+ * Date: Fri Oct 30 2015 16:43:21 GMT+0800 (CST)
  */
 /*jslint white: true, browser: true, plusplus: true, indent: 4, maxerr: 50 */
 
 window.Handsontable = {
   version: '0.19.0',
-  buildDate: 'Fri Oct 23 2015 12:42:18 GMT+0800 (CST)',
+  buildDate: 'Fri Oct 30 2015 16:43:21 GMT+0800 (CST)',
 };
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Handsontable = f()}})(function(){var define,module,exports;return (function init(modules, cache, entry) {
   (function outer (modules, cache, entry) {
@@ -3183,6 +3183,24 @@ var WalkontableTableRenderer = function WalkontableTableRenderer(wtTable) {
       this.wtTable.tbodyChildrenLength--;
     }
   },
+  refreshRowHeaders: function() {
+    var totalRows = this.wot.getSetting('totalRows');
+    var TR;
+    var visibleRowIndex = 1;
+    var $leftTr = $('.ht_clone_left tr');
+    while (visibleRowIndex < totalRows) {
+      TR = $leftTr[visibleRowIndex];
+      if (TR.firstChild) {
+        var height = $(this.wot.wtTable.TBODY.childNodes[visibleRowIndex - 1].firstChild).outerHeight();
+        if (height) {
+          TR.firstChild.style.height = height + 'px';
+        } else {
+          TR.firstChild.style.height = '';
+        }
+      }
+      visibleRowIndex++;
+    }
+  },
   renderRows: function(totalRows, rowsToRender, columnsToRender) {
     var lastTD,
         TR;
@@ -4435,6 +4453,10 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       }
       if (noRerender) {
         instance.forceFullRender = false;
+        var refreshLeftHeader = instance.getSettings().refreshLeftHeader;
+        if (typeof refreshLeftHeader === 'function') {
+          refreshLeftHeader();
+        }
       }
       instance.view.render();
       if (selection.isSelected() && !keepEditor) {
