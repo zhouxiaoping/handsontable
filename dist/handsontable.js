@@ -7,13 +7,13 @@
  * Licensed under the MIT license.
  * http://handsontable.com/
  *
- * Date: Wed Oct 21 2015 10:47:40 GMT+0800 (CST)
+ * Date: Fri Oct 30 2015 16:43:21 GMT+0800 (CST)
  */
 /*jslint white: true, browser: true, plusplus: true, indent: 4, maxerr: 50 */
 
 window.Handsontable = {
   version: '0.19.0',
-  buildDate: 'Wed Oct 21 2015 10:47:40 GMT+0800 (CST)',
+  buildDate: 'Fri Oct 30 2015 16:43:21 GMT+0800 (CST)',
 };
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Handsontable = f()}})(function(){var define,module,exports;return (function init(modules, cache, entry) {
   (function outer (modules, cache, entry) {
@@ -3139,8 +3139,10 @@ var WalkontableTableRenderer = function WalkontableTableRenderer(wtTable) {
     if (totalColumns > 0) {
       this.adjustAvailableNodes();
       adjusted = true;
-      this.renderColumnHeaders();
-      this.renderRows(totalRows, rowsToRender, columnsToRender);
+      if (!Handsontable.noRefresh) {
+        this.renderColumnHeaders();
+        this.renderRows(totalRows, rowsToRender, columnsToRender);
+      }
       if (!this.wtTable.isWorkingOnClone()) {
         workspaceWidth = this.wot.wtViewport.getWorkspaceWidth();
         this.wot.wtViewport.containerWidth = null;
@@ -3179,6 +3181,24 @@ var WalkontableTableRenderer = function WalkontableTableRenderer(wtTable) {
     while (this.wtTable.tbodyChildrenLength > renderedRowsCount) {
       this.TBODY.removeChild(this.TBODY.lastChild);
       this.wtTable.tbodyChildrenLength--;
+    }
+  },
+  refreshRowHeaders: function() {
+    var totalRows = this.wot.getSetting('totalRows');
+    var TR;
+    var visibleRowIndex = 1;
+    var $leftTr = $('.ht_clone_left tr');
+    while (visibleRowIndex < totalRows) {
+      TR = $leftTr[visibleRowIndex];
+      if (TR.firstChild) {
+        var height = $(this.wot.wtTable.TBODY.childNodes[visibleRowIndex - 1].firstChild).outerHeight();
+        if (height) {
+          TR.firstChild.style.height = height + 'px';
+        } else {
+          TR.firstChild.style.height = '';
+        }
+      }
+      visibleRowIndex++;
     }
   },
   renderRows: function(totalRows, rowsToRender, columnsToRender) {
@@ -4432,10 +4452,13 @@ Handsontable.Core = function Core(rootElement, userSettings) {
         editorManager.destroyEditor(revertOriginal);
       }
       if (noRerender) {
-        instance.view.wt.wtTable.refreshSelections();
-      } else {
-        instance.view.render();
+        instance.forceFullRender = false;
+        var refreshLeftHeader = instance.getSettings().refreshLeftHeader;
+        if (typeof refreshLeftHeader === 'function') {
+          refreshLeftHeader();
+        }
       }
+      instance.view.render();
       if (selection.isSelected() && !keepEditor) {
         editorManager.prepareEditor();
       }
@@ -4903,9 +4926,10 @@ Handsontable.Core = function Core(rootElement, userSettings) {
   this.getSchema = function() {
     return datamap.getSchema();
   };
-  this.updateSettings = function(settings, init) {
+  this.updateSettings = function(settings, init, noRefresh) {
     var i,
         clen;
+    Handsontable.noRefresh = noRefresh;
     if (typeof settings.rows !== 'undefined') {
       throw new Error('"rows" setting is no longer supported. do you mean startRows, minRows or maxRows?');
     }
@@ -4990,6 +5014,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       instance.forceFullRender = true;
       selection.refreshBorders(null, true);
     }
+    Handsontable.noRefresh = false;
   };
   this.getValue = function() {
     var sel = instance.getSelected();
@@ -15453,7 +15478,7 @@ var $ManualRowResize = ManualRowResize;
       var autoRowHeightResult = autoRowSizePlugin ? autoRowSizePlugin.heights[row] : null;
       row = this.hot.runHooks('modifyRow', row);
       var manualRowHeight = this.manualRowHeights[row];
-      if (manualRowHeight !== void 0 && (manualRowHeight === autoRowHeightResult || manualRowHeight > (height || 0))) {
+      if (manualRowHeight !== void 0 && (manualRowHeight === autoRowHeightResult || !autoRowSizePlugin.enabled)) {
         return manualRowHeight;
       }
     }
